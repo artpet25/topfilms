@@ -218,8 +218,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .status-btns{display:flex;gap:6px;}
 .status-btn{flex:1;padding:10px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all var(--transition);}
 .status-btn.active-vu{background:var(--green-dim);color:var(--green);border-color:rgba(74,222,128,.3);}
-.status-btn.active-aVoir{background:var(--blue-dim);color:var(--blue);border-color:rgba(96,165,250,.3);}
-.tmdb-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:500;border:1px solid rgba(232,201,122,.2);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:14px;transition:all var(--transition);}
+.status-btn.active-aVoir{background:var(--blue-dim);color:var(--blue);border-color:rgba(41,128,185,.3);}
+.tmdb-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:500;border:1px solid rgba(196,150,58,.25);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:14px;transition:all var(--transition);}
 .tmdb-btn:hover{background:var(--accent-glow);}
 .btn-submit{width:100%;padding:15px;border-radius:var(--radius-sm);background:var(--accent);color:#0c0c12;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;transition:opacity var(--transition);}
 .btn-submit:hover{opacity:.9;}
@@ -783,7 +783,7 @@ function drawChart(){
   // Grid
   [0.25,0.5,0.75,1].forEach(f=>{
     const y=pad.top+ch-f*ch;
-    ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.strokeStyle='rgba(0,0,0,0.07)';ctx.lineWidth=1;
     ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
   });
   // Bars
@@ -791,13 +791,13 @@ function drawChart(){
     const x=pad.left+i*slotW+slotW/2-barW/2;
     const bh=Math.max(2,(barData[i]/maxVal)*ch);
     const y=pad.top+ch-bh;
-    ctx.fillStyle='rgba(232,201,122,0.22)';
+    ctx.fillStyle='rgba(196,150,58,0.18)';
     ctx.beginPath();
     if(ctx.roundRect)ctx.roundRect(x,y,barW,bh,[3,3,0,0]);
     else ctx.rect(x,y,barW,bh);
     ctx.fill();
     if(barData[i]>0){
-      ctx.fillStyle='rgba(232,201,122,0.75)';
+      ctx.fillStyle='rgba(139,100,20,0.85)';
       ctx.font='bold 9px sans-serif';ctx.textAlign='center';
       ctx.fillText(barData[i],x+barW/2,y-3);
     }
@@ -822,7 +822,7 @@ function drawChart(){
     }
   });
   // X labels
-  ctx.fillStyle='rgba(200,198,220,0.55)';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='rgba(100,98,110,0.8)';ctx.font='9px sans-serif';ctx.textAlign='center';
   labels.forEach((l,i)=>{
     ctx.fillText(l,pad.left+i*slotW+slotW/2,H-4);
   });
@@ -917,7 +917,7 @@ function drawHoursChart(){
 
   // Draw vert bar (vus) — VERT
   ctx.save();
-  ctx.fillStyle='#4ade80';
+  ctx.fillStyle='#27ae60';
   ctx.beginPath();
   ctx.rect(x1, y1, barW, vuBarH);
   ctx.fill();
@@ -925,7 +925,7 @@ function drawHoursChart(){
 
   // Draw rouge bar (à voir) — ROUGE
   ctx.save();
-  ctx.fillStyle='#60a5fa';
+  ctx.fillStyle='#2980b9';
   ctx.beginPath();
   ctx.rect(x2, y2, barW, avBarH);
   ctx.fill();
@@ -935,9 +935,9 @@ function drawHoursChart(){
   ctx.save();
   ctx.font='bold 11px sans-serif';
   ctx.textAlign='center';
-  ctx.fillStyle='#4ade80';
+  ctx.fillStyle='#27ae60';
   ctx.fillText(vuHr+'h', x1+barW/2, y1-6);
-  ctx.fillStyle='#60a5fa';
+  ctx.fillStyle='#2980b9';
   ctx.fillText(avHr+'h', x2+barW/2, y2-6);
   ctx.restore();
 
@@ -945,9 +945,9 @@ function drawHoursChart(){
   ctx.save();
   ctx.font='9px sans-serif';
   ctx.textAlign='center';
-  ctx.fillStyle='#4ade80';
+  ctx.fillStyle='#27ae60';
   ctx.fillText('✅ Vus', x1+barW/2, H-6);
-  ctx.fillStyle='#60a5fa';
+  ctx.fillStyle='#2980b9';
   ctx.fillText('🔖 À voir', x2+barW/2, H-6);
   ctx.restore();
 }
