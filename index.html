@@ -7,22 +7,22 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2240%22%20fill%3D%22%230c0c12%22/%3E%3Ctext%20x%3D%2290%22%20y%3D%22115%22%20font-size%3D%2290%22%20text-anchor%3D%22middle%22%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
 <meta name="apple-mobile-web-app-title" content="Films Nounous">
-<meta name="theme-color" content="#0c0c12">
+<meta name="theme-color" content="#f7f7f2">
 <link rel="manifest" href="manifest.json">
 <title>Projet Films des Nounous</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0c0c12;--surface:#141420;--surface2:#1c1c2e;--surface3:#242438;
-  --border:rgba(255,255,255,0.07);--border-h:rgba(255,255,255,0.13);
-  --accent:#e8c97a;--accent-dim:rgba(232,201,122,0.12);--accent-glow:rgba(232,201,122,0.25);
-  --text:#f0eef8;--muted:#6a6882;--muted2:#9896b0;
-  --green:#4ade80;--green-dim:rgba(74,222,128,0.12);
-  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.12);
-  --red:#f87171;--red-dim:rgba(248,113,113,0.12);
-  --purple:#c084fc;
+  --bg:#f7f7f2;--surface:#ffffff;--surface2:#f0f0ea;--surface3:#e8e8e0;
+  --border:rgba(0,0,0,0.08);--border-h:rgba(0,0,0,0.16);
+  --accent:#c4963a;--accent-dim:rgba(196,150,58,0.1);--accent-glow:rgba(196,150,58,0.2);
+  --text:#1a1a1a;--muted:#8a8880;--muted2:#5a5850;
+  --green:#27ae60;--green-dim:rgba(39,174,96,0.1);
+  --blue:#2980b9;--blue-dim:rgba(41,128,185,0.1);
+  --red:#e74c3c;--red-dim:rgba(231,76,60,0.1);
+  --purple:#8e44ad;
   --radius:14px;--radius-sm:9px;--radius-lg:22px;
-  --shadow:0 8px 32px rgba(0,0,0,0.5);
+  --shadow:0 4px 20px rgba(0,0,0,0.12);
   --transition:.2s ease;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -32,7 +32,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 /* ── HEADER ── */
 .header{
   padding:52px 20px 14px;position:sticky;top:0;z-index:10;
-  background:linear-gradient(180deg,rgba(12,12,18,0.97) 75%,transparent);
+  background:linear-gradient(180deg,rgba(247,247,242,0.97) 75%,transparent);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
 .header h1{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;
@@ -181,8 +181,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .detail-hero{position:relative;height:210px;overflow:hidden;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:var(--surface2);}
 .detail-hero img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
 .detail-hero-fb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px;}
-.detail-hero-grad{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,var(--surface) 100%);}
-.detail-hero-rank{position:absolute;top:14px;left:18px;font-size:11px;color:var(--accent);background:rgba(0,0,0,.6);padding:4px 12px;border-radius:999px;border:1px solid var(--accent-glow);}
+.detail-hero-grad{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(255,255,255,0.95) 100%);}
+.detail-hero-rank{position:absolute;top:14px;left:18px;font-size:11px;color:var(--accent);background:rgba(255,255,255,.85);padding:4px 12px;border-radius:999px;border:1px solid var(--accent-glow);}
 .detail-body{padding:0 20px 48px;}
 .detail-handle{width:36px;height:4px;background:var(--border-h);border-radius:4px;margin:0 auto 18px;}
 .detail-title{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:4px;line-height:1.2;}
