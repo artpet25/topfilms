@@ -1,12 +1,12 @@
 {
-  "name": "Hello World PWA",
-  "short_name": "Hello PWA",
-  "description": "A responsive Hello World Progressive Web App",
+  "name": "Projet Films des Nounous",
+  "short_name": "Films Nounous",
+  "description": "Suivi de films personnel — liste, notes et statistiques",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#0f0f1a",
-  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "background_color": "#f8f8f8",
+  "theme_color": "#c4963a",
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -27,6 +27,5 @@
       "purpose": "any"
     }
   ],
-  "screenshots": [],
-  "categories": ["utilities"]
+  "categories": ["entertainment", "utilities"]
 }
