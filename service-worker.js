@@ -1,12 +1,12 @@
-const CACHE_NAME = 'films-nounous-v1';
+const CACHE_NAME = 'films-nounous-v2';
 
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/topfilms/',
+  '/topfilms/index.html',
+  '/topfilms/manifest.json',
+  '/topfilms/icons/icon.svg',
+  '/topfilms/icons/icon-192.png',
+  '/topfilms/icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
