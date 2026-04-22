@@ -102,6 +102,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .search-input::placeholder{color:var(--muted);}
 .search-input:focus{border-color:var(--accent);}
 .search-icon{position:absolute;left:34px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;opacity:.5;}
+.clear-filters-btn{display:none;width:100%;margin-top:6px;padding:8px;border-radius:var(--radius);border:1px dashed var(--border-h);background:transparent;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all var(--transition);}
+.clear-filters-btn:hover{background:var(--red-dim);color:var(--red);border-color:var(--red);}
+.clear-filters-btn.visible{display:block;}
 
 /* ── CONTROLS ── */
 .controls-row{display:flex;align-items:center;gap:8px;padding:0 20px 10px;}
@@ -321,6 +324,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 <div class="search-wrap">
   <span class="search-icon">🔍</span>
   <input class="search-input" type="text" id="search" placeholder="Titre, réalisateur, catégorie…" oninput="render()">
+  <button class="clear-filters-btn" id="clear-filters-btn" onclick="clearAllFilters()">✕ Effacer tous les filtres</button>
 </div>
 
 <div class="controls-row">
@@ -603,6 +607,16 @@ async function lazyLoad(list){
 
 // ── RENDER ────────────────────────────────────────────────────
 function setFilter(f,el){filter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
+function clearAllFilters(){
+  filter='tous';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tab').classList.add('active');
+  document.getElementById('cat-filter').value='';
+  document.getElementById('plat-filter').value='';
+  document.getElementById('month-filter').value='';
+  document.getElementById('search').value='';
+  render();
+}
 function setSort(k,el){
   if(sortKey===k){ sortDir*=-1; }
   else { sortKey=k; sortDir=1; }
@@ -645,6 +659,8 @@ function render(){
   const catF=document.getElementById('cat-filter').value;
   const platF=document.getElementById('plat-filter').value;
   const monthF=document.getElementById('month-filter').value;
+  const hasFilter=filter!=='tous'||catF||platF||monthF||q;
+  document.getElementById('clear-filters-btn').classList.toggle('visible',!!hasFilter);
   const MONTHS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
   // Update dropdowns
