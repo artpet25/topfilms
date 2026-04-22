@@ -267,6 +267,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v5 · posters on</p>
     </div>
   </div>
 </div>
@@ -450,25 +451,18 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 
 <script>
 
-// Poster fetch via iTunes Search API (JSONP — no key, no CORS)
-function itunesJsonp(title){
-  return new Promise((resolve)=>{
-    const cb='itunes_cb_'+Date.now()+Math.floor(Math.random()*10000);
-    let done=false;
-    const cleanup=()=>{try{delete window[cb];}catch(e){}if(script.parentNode)script.parentNode.removeChild(script);};
-    const timer=setTimeout(()=>{if(!done){done=true;cleanup();resolve(null);}},8000);
-    window[cb]=(data)=>{if(done)return;done=true;clearTimeout(timer);cleanup();resolve(data);};
-    const script=document.createElement('script');
-    script.src=`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&media=movie&entity=movie&limit=10&callback=${cb}`;
-    script.onerror=()=>{if(!done){done=true;clearTimeout(timer);cleanup();resolve(null);}};
-    document.head.appendChild(script);
-  });
-}
+// Poster fetch via iTunes Search API routed through allorigins CORS proxy
 async function fetchMovieData(title,year){
   if(!title)return null;
   const cacheKey=(title+'|'+(year||'')).toLowerCase();
   if(tmdbCache[cacheKey])return tmdbCache[cacheKey];
-  const data=await itunesJsonp(title);
+  const itunesUrl=`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&media=movie&entity=movie&limit=10`;
+  const proxyUrl=`https://api.allorigins.win/raw?url=${encodeURIComponent(itunesUrl)}`;
+  let data=null;
+  try{
+    const r=await fetch(proxyUrl);
+    if(r.ok)data=await r.json();
+  }catch(e){console.warn('[poster]',e);}
   if(!data||!data.results||!data.results.length)return null;
   let best=data.results[0];
   if(year){
@@ -1215,9 +1209,28 @@ function doImport(){
 </script>
 <script>
 if('serviceWorker' in navigator){
+  // Unregister any old root-scoped SW lingering from v1 of the app
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){
+      if(r.scope&&r.scope.endsWith('/')&&!r.scope.endsWith('/topfilms/')){
+        r.unregister();
+      }
+    });
+  });
   window.addEventListener('load',function(){
     navigator.serviceWorker.register('service-worker.js')
-      .then(function(){console.log('[SW] Registered');})
+      .then(function(reg){
+        console.log('[SW] Registered');
+        reg.addEventListener('updatefound',function(){
+          const nw=reg.installing;
+          if(!nw)return;
+          nw.addEventListener('statechange',function(){
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              window.location.reload();
+            }
+          });
+        });
+      })
       .catch(function(err){console.warn('[SW] Failed:',err);});
   });
 }
