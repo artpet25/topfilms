@@ -267,7 +267,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v7 · tmdb</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v8 · tmdb</p>
     </div>
   </div>
 </div>
@@ -1120,15 +1120,29 @@ function saveMovie(){
 
 render();
 
-// Initial cloud sync: if cloud has data use it, otherwise seed cloud from local
+// Initial cloud sync — never leaves the app with 0 movies
 (async()=>{
   if(!sb)return;
-  const cloud=await cloudFetchAll();
-  if(cloud===null)return;
-  if(cloud.length===0){await cloudBulkInsert(movies);return;}
-  movies=cloud;
-  save();
-  render();
+  const snapshot=movies.slice(); // keep a copy in case we need to rollback
+  try{
+    const cloud=await cloudFetchAll();
+    if(!cloud){return;} // fetch failed → keep local
+    const valid=cloud.filter(m=>m&&m.id&&m.title); // discard malformed rows
+    if(valid.length===0){
+      await cloudBulkInsert(snapshot); // cloud empty → seed it from local
+      return;
+    }
+    movies=valid;
+    save();
+    render();
+    // Safety net: if render produced 0 cards, rollback
+    if(!movies.length){movies=snapshot;save();render();}
+  }catch(e){
+    console.warn('[sb] sync',e);
+    movies=snapshot; // rollback on any error
+    save();
+    render();
+  }
 })();
 
 function exportData(){
