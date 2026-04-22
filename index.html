@@ -267,7 +267,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v5 · posters on</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v6 · tmdb</p>
     </div>
   </div>
 </div>
@@ -451,19 +451,29 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 
 <script>
 
-// Poster fetch via iTunes Search API routed through allorigins CORS proxy
+// Poster fetch via TMDB API v3
+const TMDB_KEY='0a96f8db300b6bcc2f86e83373a7e856';
+const TMDB_IMG='https://image.tmdb.org/t/p/w500';
 async function fetchMovieData(title,year){
   if(!title)return null;
   const cacheKey=(title+'|'+(year||'')).toLowerCase();
   if(tmdbCache[cacheKey])return tmdbCache[cacheKey];
-  const itunesUrl=`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&media=movie&entity=movie&limit=10`;
-  const proxyUrl=`https://api.allorigins.win/raw?url=${encodeURIComponent(itunesUrl)}`;
-  let data=null;
   try{
-    const r=await fetch(proxyUrl);
-    if(r.ok)data=await r.json();
-  }catch(e){console.warn('[poster]',e);}
-  if(!data||!data.results||!data.results.length)return null;
+    const q=encodeURIComponent(title);
+    const url=`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${q}${year?'&year='+year:''}`;
+    const r=await fetch(url);
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(!data.results||!data.results.length)return null;
+    const m=data.results[0];
+    const poster=m.poster_path?TMDB_IMG+m.poster_path:'';
+    const backdrop=m.backdrop_path?TMDB_IMG+m.backdrop_path:'';
+    const result={poster,backdrop,desc:m.overview||''};
+    tmdbCache[cacheKey]=result;
+    try{localStorage.setItem('tc',JSON.stringify(tmdbCache));}catch(e){}
+    return result;
+  }catch(e){console.warn('[tmdb]',e);return null;}
+}
   let best=data.results[0];
   if(year){
     const y=parseInt(year);
