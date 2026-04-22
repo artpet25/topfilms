@@ -267,7 +267,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v6 · tmdb</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v7 · tmdb</p>
     </div>
   </div>
 </div>
@@ -600,7 +600,7 @@ const SEED=[
 // ── SUPABASE ───────────────────────────────────────────────────
 const SUPABASE_URL='https://jmqzkaiynffuibpuvoqz.supabase.co';
 const SUPABASE_KEY='sb_publishable_3j98iINpvqmz0WybzhDxwg_vg-pYw-g';
-const sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+let sb=null;try{if(window.supabase)sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.warn('[sb] init',e);}
 const FIELD_MAP={dateWatched:'date_watched',desc:'description',notePen:'note_pen',noteArt:'note_art',notePenText:'note_pen_text',noteArtText:'note_art_text'};
 const REV_MAP=Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
 function toDb(m){const o={};for(const k in m){if(k==='id'||['title','director','year','runtime','rank','cat','plat','status','emoji','poster','backdrop','progress'].includes(k))o[k]=m[k];else if(FIELD_MAP[k])o[FIELD_MAP[k]]=m[k];}return o;}
