@@ -263,10 +263,6 @@ input[type=range]{width:100%;accent-color:var(--accent);}
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
     </div>
-    <div class="header-actions" style="display:flex;gap:6px;margin-top:4px;">
-      <button onclick="exportData()">⬇ Export</button>
-      <button onclick="showImport()">⬆ Import</button>
-    </div>
   </div>
 </div>
 
@@ -317,6 +313,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
   <div class="tab active" onclick="setFilter('tous',this)">Tous</div>
   <div class="tab" onclick="setFilter('vu',this)">✅ Vus</div>
   <div class="tab" onclick="setFilter('à voir',this)">🔖 À voir</div>
+  <select class="tab-select" id="cat-filter" onchange="render()"><option value="">🎭 Genre</option></select>
   <select class="tab-select" id="plat-filter" onchange="render()"><option value="">🎬 Plateforme</option></select>
   <select class="tab-select" id="month-filter" onchange="render()"><option value="">📅 Mois</option></select>
 </div>
@@ -645,11 +642,17 @@ function render(){
     else listEl2.classList.remove('no-poster');
   }
   const q=document.getElementById('search').value.toLowerCase();
+  const catF=document.getElementById('cat-filter').value;
   const platF=document.getElementById('plat-filter').value;
   const monthF=document.getElementById('month-filter').value;
   const MONTHS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
   // Update dropdowns
+  const allCats=[...new Set(movies.flatMap(m=>(m.cat||'').split(/[,/]/).map(c=>c.trim())).filter(Boolean))].sort();
+  const csel=document.getElementById('cat-filter');
+  const cval=csel.value;
+  csel.innerHTML='<option value="">🎭 Genre</option>'+allCats.map(c=>`<option value="${c}"${c===cval?' selected':''}>${c}</option>`).join('');
+
   const allPlats=[...new Set(movies.map(m=>m.plat).filter(Boolean))].sort();
   const psel=document.getElementById('plat-filter');
   const pval=psel.value;
@@ -666,10 +669,11 @@ function render(){
   let list=movies.filter(m=>{
     const mf=filter==='tous'||m.status===filter;
     const mq=!q||m.title.toLowerCase().includes(q)||(m.director||'').toLowerCase().includes(q)||(m.cat||'').toLowerCase().includes(q);
+    const mcat=!catF||(m.cat||'').split(/[,/]/).map(c=>c.trim()).includes(catF);
     const mp=!platF||m.plat===platF;
     const mm=!monthF||(m.dateWatched&&m.dateWatched.startsWith(monthF));
     const mc=!chartMonthFilter||(m.dateWatched&&m.dateWatched.startsWith(chartMonthFilter));
-    return mf&&mq&&mp&&mm&&mc;
+    return mf&&mq&&mcat&&mp&&mm&&mc;
   });
 
   list.sort((a,b)=>{
