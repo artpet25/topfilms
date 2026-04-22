@@ -450,8 +450,34 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 
 <script>
 
-// No external image API needed — using emojis
-async function fetchMovieData(title,year){return null;}
+// Poster fetch via iTunes Search API (no key needed)
+async function fetchMovieData(title,year){
+  if(!title)return null;
+  const cacheKey=(title+'|'+(year||'')).toLowerCase();
+  if(tmdbCache[cacheKey])return tmdbCache[cacheKey];
+  try{
+    const q=encodeURIComponent(title);
+    const r=await fetch(`https://itunes.apple.com/search?term=${q}&media=movie&entity=movie&limit=10`);
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(!data.results||!data.results.length)return null;
+    let best=data.results[0];
+    if(year){
+      const y=parseInt(year);
+      const match=data.results.find(x=>{
+        const ry=x.releaseDate?parseInt(x.releaseDate.slice(0,4)):null;
+        return ry&&Math.abs(ry-y)<=1;
+      });
+      if(match)best=match;
+    }
+    const art=best.artworkUrl100||'';
+    const poster=art.replace(/\/\d+x\d+bb\./,'/600x900bb.');
+    const result={poster,backdrop:poster,desc:best.longDescription||''};
+    tmdbCache[cacheKey]=result;
+    try{localStorage.setItem('tc',JSON.stringify(tmdbCache));}catch(e){}
+    return result;
+  }catch(e){console.warn('[itunes]',e);return null;}
+}
 
 // ── SEED DATA ──────────────────────────────────────────────────
 const SEED=[
@@ -599,7 +625,7 @@ if(migrated) save();
 function save(){localStorage.setItem('cj_v7',JSON.stringify(movies));}
 function saveOne(m){save();cloudUpsert(m);}
 
-let filter='tous', sortKey='rank', sortDir=1, postersVisible=false, chartMonthFilter='', chartsVisible=true, detailId=null, editId=null, currentStatus='à voir';
+let filter='tous', sortKey='rank', sortDir=1, postersVisible=true, chartMonthFilter='', chartsVisible=true, detailId=null, editId=null, currentStatus='à voir';
 
 // ── HELPERS ────────────────────────────────────────────────────
 function fmt(min){if(!min)return'—';return`${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;}
