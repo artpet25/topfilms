@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <title>Projet Films des Nounous</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#f7f7f2;--surface:#ffffff;--surface2:#f0f0ea;--surface3:#e8e8e0;
@@ -557,6 +558,19 @@ const SEED=[
   {title:"Parasite",director:"Bong Joon-ho",year:2019,runtime:132,rank:1,cat:"Thriller, Drame",plat:"",status:"vu",dateWatched:"2025-01-01",emoji:"🪲",desc:"Une famille pauvre s'infiltre progressivement dans la vie d'une famille riche de Séoul, avec des conséquences inattendues et explosives."},
 ];
 
+// ── SUPABASE ───────────────────────────────────────────────────
+const SUPABASE_URL='https://jmqzkaiynffuibpuvoqz.supabase.co';
+const SUPABASE_KEY='sb_publishable_3j98iINpvqmz0WybzhDxwg_vg-pYw-g';
+const sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const FIELD_MAP={dateWatched:'date_watched',desc:'description',notePen:'note_pen',noteArt:'note_art',notePenText:'note_pen_text',noteArtText:'note_art_text'};
+const REV_MAP=Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
+function toDb(m){const o={};for(const k in m){if(k==='id'||['title','director','year','runtime','rank','cat','plat','status','emoji','poster','backdrop','progress'].includes(k))o[k]=m[k];else if(FIELD_MAP[k])o[FIELD_MAP[k]]=m[k];}return o;}
+function fromDb(r){const o={};for(const k in r){if(k==='updated_at')continue;o[REV_MAP[k]||k]=r[k];}return o;}
+async function cloudUpsert(m){if(!sb)return;try{await sb.from('movies').upsert(toDb(m));}catch(e){console.warn('[sb] upsert',e);}}
+async function cloudDelete(id){if(!sb)return;try{await sb.from('movies').delete().eq('id',id);}catch(e){console.warn('[sb] del',e);}}
+async function cloudFetchAll(){if(!sb)return null;try{const{data,error}=await sb.from('movies').select('*');if(error)throw error;return data.map(fromDb);}catch(e){console.warn('[sb] fetch',e);return null;}}
+async function cloudBulkInsert(list){if(!sb)return;try{await sb.from('movies').upsert(list.map(toDb));}catch(e){console.warn('[sb] bulk',e);}}
+
 // ── STATE ──────────────────────────────────────────────────────
 let tmdbCache = JSON.parse(localStorage.getItem('tc')||'{}');
 let movies = JSON.parse(localStorage.getItem('cj_v7')||'null');
@@ -582,6 +596,7 @@ movies=movies.map(m=>{
 if(migrated) save();
 
 function save(){localStorage.setItem('cj_v7',JSON.stringify(movies));}
+function saveOne(m){save();cloudUpsert(m);}
 
 let filter='tous', sortKey='rank', sortDir=1, postersVisible=false, chartMonthFilter='', chartsVisible=true, detailId=null, editId=null, currentStatus='à voir';
 
@@ -597,7 +612,7 @@ async function lazyLoad(list){
     if(d){
       m.poster=d.poster||'';m.backdrop=d.backdrop||'';
       if(!m.desc&&d.desc)m.desc=d.desc;
-      save();
+      saveOne(m);
       const img=document.querySelector(`[data-pid="${m.id}"]`);
       const fb=document.querySelector(`[data-pfb="${m.id}"]`);
       if(img&&m.poster){img.src=m.poster;img.style.display='block';if(fb)fb.style.display='none';}
@@ -998,7 +1013,7 @@ async function openDetail(id){
   if(m.noteArtText)nh+=`<div class="detail-note-block"><div class="detail-note-label">Note Art</div><div class="detail-note-text">"${m.noteArtText}"</div></div>`;
   document.getElementById('d-notes').innerHTML=nh;
   document.getElementById('d-edit-btn').onclick=()=>{closeDetail();openModal(id);};
-  document.getElementById('d-del-btn').onclick=()=>{if(confirm('Supprimer ?')){movies=movies.filter(x=>x.id!==id);save();render();closeDetail();}};
+  document.getElementById('d-del-btn').onclick=()=>{if(confirm('Supprimer ?')){movies=movies.filter(x=>x.id!==id);save();cloudDelete(id);render();closeDetail();}};
   document.getElementById('detail-overlay').classList.add('open');
 }
 function closeDetail(){document.getElementById('detail-overlay').classList.remove('open');}
@@ -1061,10 +1076,21 @@ function saveMovie(){
     emoji:document.getElementById('f-emoji').value.trim()||'🎬',
   };
   if(editId)movies=movies.map(x=>x.id===editId?m:x);else movies.unshift(m);
-  save();render();closeModal();
+  saveOne(m);render();closeModal();
 }
 
 render();
+
+// Initial cloud sync: if cloud has data use it, otherwise seed cloud from local
+(async()=>{
+  if(!sb)return;
+  const cloud=await cloudFetchAll();
+  if(cloud===null)return;
+  if(cloud.length===0){await cloudBulkInsert(movies);return;}
+  movies=cloud;
+  save();
+  render();
+})();
 
 function exportData(){
   const data = { exported: new Date().toISOString(), movies: movies };
@@ -1106,7 +1132,7 @@ function importData(event){
       if(!Array.isArray(imported)) throw new Error('Format invalide');
       if(confirm(`Importer ${imported.length} films ? Tes données actuelles seront remplacées.`)){
         movies = imported;
-        save();
+        save();cloudBulkInsert(movies);
         // Start in compact mode (postersVisible=false)
 const listEl=document.getElementById('list');
 const toggleBtn=document.getElementById('view-toggle-btn');
