@@ -1,4 +1,4 @@
-const CACHE_NAME = 'films-nounous-v2';
+const CACHE_NAME = 'films-nounous-v3';
 
 const PRECACHE_ASSETS = [
   '/topfilms/',
@@ -7,6 +7,7 @@ const PRECACHE_ASSETS = [
   '/topfilms/icons/icon.svg',
   '/topfilms/icons/icon-192.png',
   '/topfilms/icons/icon-512.png',
+  '/topfilms/icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
