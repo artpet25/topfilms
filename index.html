@@ -224,8 +224,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .status-btn{flex:1;padding:10px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all var(--transition);}
 .status-btn.active-vu{background:var(--green-dim);color:var(--green);border-color:rgba(74,222,128,.3);}
 .status-btn.active-aVoir{background:var(--blue-dim);color:var(--blue);border-color:rgba(41,128,185,.3);}
-.tmdb-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:500;border:1px solid rgba(196,150,58,.25);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:14px;transition:all var(--transition);}
-.tmdb-btn:hover{background:var(--accent-glow);}
 .btn-submit{width:100%;padding:15px;border-radius:var(--radius-sm);background:var(--accent);color:#0c0c12;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;transition:opacity var(--transition);}
 .btn-submit:hover{opacity:.9;}
 
@@ -267,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v9 · safe</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v10 · clean</p>
     </div>
   </div>
 </div>
@@ -386,7 +384,6 @@ input[type=range]{width:100%;accent-color:var(--accent);}
   <div class="modal">
     <div class="modal-handle"></div>
     <h2 id="modal-title">Ajouter un film</h2>
-    <button class="tmdb-btn" id="tmdb-btn" onclick="fetchTMDB()">🎬 Récupérer affiche &amp; synopsis</button>
     <div class="field"><label>Titre *</label><input type="text" id="f-title" placeholder="Ex: Parasite"></div>
     <div class="two-col">
       <div class="field"><label>Réalisateur</label><input type="text" id="f-director"></div>
@@ -400,8 +397,8 @@ input[type=range]{width:100%;accent-color:var(--accent);}
       <div class="field"><label>Catégorie</label><input type="text" id="f-cat" placeholder="Drame, Thriller"></div>
       <div class="field"><label>Plateforme</label><input type="text" id="f-plat" placeholder="Netflix"></div>
     </div>
-    <div class="field"><label>Synopsis</label><textarea id="f-desc" placeholder="Rempli via le bouton ci-dessus…"></textarea></div>
-    <div class="field"><label>URL Affiche</label><input type="text" id="f-poster" placeholder="Rempli via le bouton ci-dessus…"></div>
+    <div class="field"><label>Synopsis</label><textarea id="f-desc" placeholder="(optionnel)"></textarea></div>
+    <input type="hidden" id="f-poster" value="">
     <div class="field">
       <label>Statut</label>
       <div class="status-btns">
@@ -450,46 +447,6 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 
 
 <script>
-
-// Poster fetch via TMDB API v3
-const TMDB_KEY='0a96f8db300b6bcc2f86e83373a7e856';
-const TMDB_IMG='https://image.tmdb.org/t/p/w500';
-async function fetchMovieData(title,year){
-  if(!title)return null;
-  const cacheKey=(title+'|'+(year||'')).toLowerCase();
-  if(tmdbCache[cacheKey])return tmdbCache[cacheKey];
-  try{
-    const q=encodeURIComponent(title);
-    const url=`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${q}${year?'&year='+year:''}`;
-    const r=await fetch(url);
-    if(!r.ok)return null;
-    const data=await r.json();
-    if(!data.results||!data.results.length)return null;
-    const m=data.results[0];
-    const poster=m.poster_path?TMDB_IMG+m.poster_path:'';
-    const backdrop=m.backdrop_path?TMDB_IMG+m.backdrop_path:'';
-    const result={poster,backdrop,desc:m.overview||''};
-    tmdbCache[cacheKey]=result;
-    try{localStorage.setItem('tc',JSON.stringify(tmdbCache));}catch(e){}
-    return result;
-  }catch(e){console.warn('[tmdb]',e);return null;}
-}
-  let best=data.results[0];
-  if(year){
-    const y=parseInt(year);
-    const match=data.results.find(x=>{
-      const ry=x.releaseDate?parseInt(x.releaseDate.slice(0,4)):null;
-      return ry&&Math.abs(ry-y)<=1;
-    });
-    if(match)best=match;
-  }
-  const art=best.artworkUrl100||'';
-  const poster=art.replace(/\/\d+x\d+bb\./,'/600x900bb.');
-  const result={poster,backdrop:poster,desc:best.longDescription||''};
-  tmdbCache[cacheKey]=result;
-  try{localStorage.setItem('tc',JSON.stringify(tmdbCache));}catch(e){}
-  return result;
-}
 
 // ── SEED DATA ──────────────────────────────────────────────────
 const SEED=[
@@ -611,55 +568,27 @@ async function cloudFetchAll(){if(!sb)return null;try{const{data,error}=await sb
 async function cloudBulkInsert(list){if(!sb)return;try{await sb.from('movies').upsert(list.map(toDb));}catch(e){console.warn('[sb] bulk',e);}}
 
 // ── STATE ──────────────────────────────────────────────────────
-let tmdbCache = JSON.parse(localStorage.getItem('tc')||'{}');
-let movies = JSON.parse(localStorage.getItem('cj_v7')||'null');
-// Filter out corrupted rows (missing id or title) — v7 crash may have saved bad data
-if(Array.isArray(movies)) movies = movies.filter(m=>m&&m.id&&typeof m.title==='string'&&m.title);
+// Bumped key to cj_v10 — forces fresh start, bypasses any corrupted v7 cache
+const STORAGE_KEY='cj_v10';
+let movies=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+if(Array.isArray(movies)) movies=movies.filter(m=>m&&m.id&&typeof m.title==='string'&&m.title);
 if(!movies||!movies.length){
-  movies = SEED.map((m,i)=>({
+  movies=SEED.map((m,i)=>({
     id:'seed_'+i, poster:'', backdrop:'', desc:'',
     notePenText:'', noteArtText:'', dateWatched:'', progress:0,
     notePen:null, noteArt:null, ...m
   }));
-  localStorage.setItem('cj_v7', JSON.stringify(movies));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
 }
-// Migrate missing fields + dates from SEED
-const seedMap={};
-SEED.forEach(s=>{ seedMap[s.title]={date:s.dateWatched||'',poster:s.poster||''}; });
-let migrated=false;
-movies=movies.map(m=>{
-  const base={poster:'',backdrop:'',desc:'',notePenText:'',noteArtText:'',dateWatched:'',progress:0,...m};
-  const sm=seedMap[base.title]||{};
-  if((!base.dateWatched||base.dateWatched==='')&&sm.date){base.dateWatched=sm.date;migrated=true;}
-  if((!base.poster||base.poster==='')&&sm.poster){base.poster=sm.poster;base.backdrop=sm.poster;migrated=true;}
-  return base;
-});
-if(migrated) save();
 
-function save(){localStorage.setItem('cj_v7',JSON.stringify(movies));}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(movies));}
 function saveOne(m){save();cloudUpsert(m);}
 
-let filter='tous', sortKey='rank', sortDir=1, postersVisible=true, chartMonthFilter='', chartsVisible=true, detailId=null, editId=null, currentStatus='à voir';
+let filter='tous', sortKey='rank', sortDir=1, postersVisible=false, chartMonthFilter='', chartsVisible=true, detailId=null, editId=null, currentStatus='à voir';
 
 // ── HELPERS ────────────────────────────────────────────────────
 function fmt(min){if(!min)return'—';return`${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;}
 function nd(n){if(n===null||n===undefined||n==='')return'—';return n+'/10';}
-
-// ── LAZY POSTER LOADING ────────────────────────────────────────
-async function lazyLoad(list){
-  for(const m of list){
-    if(m.poster) continue;
-    const d=await fetchMovieData(m.title,m.year);
-    if(d){
-      m.poster=d.poster||'';m.backdrop=d.backdrop||'';
-      if(!m.desc&&d.desc)m.desc=d.desc;
-      saveOne(m);
-      const img=document.querySelector(`[data-pid="${m.id}"]`);
-      const fb=document.querySelector(`[data-pfb="${m.id}"]`);
-      if(img&&m.poster){img.src=m.poster;img.style.display='block';if(fb)fb.style.display='none';}
-    }
-  }
-}
 
 // ── RENDER ────────────────────────────────────────────────────
 function setFilter(f,el){filter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
@@ -805,7 +734,6 @@ function render(){
     </div>`;
   }).join('');
 
-  lazyLoad(list.filter(m=>!m.poster));
   updateStats();
   setTimeout(()=>{drawChart();drawHoursChart();},0);
 }
@@ -1036,8 +964,7 @@ async function openDetail(id){
   hf.textContent=m.emoji||'🎬';hi.style.display='none';hf.style.display='flex';
   const hr=document.getElementById('d-hero-rank');
   if(m.rank){hr.textContent='#'+m.rank+' du classement';hr.style.display='block';}else hr.style.display='none';
-  let imgUrl=m.backdrop||m.poster||'';
-  if(!imgUrl){const d=await fetchMovieData(m.title,m.year);if(d){imgUrl=d.backdrop||d.poster||'';if(!m.poster&&d.poster)m.poster=d.poster;if(!m.backdrop&&d.backdrop)m.backdrop=d.backdrop;if(!m.desc&&d.desc)m.desc=d.desc;save();}}
+  const imgUrl=m.backdrop||m.poster||'';
   if(imgUrl){hi.src=imgUrl;hi.style.display='block';hf.style.display='none';}
   document.getElementById('d-title').textContent=m.title;
   document.getElementById('d-sub').textContent=[m.director,m.year].filter(Boolean).join(' · ');
@@ -1066,18 +993,6 @@ function selectStatus(s){
   currentStatus=s;
   document.querySelectorAll('.status-btn').forEach(b=>{b.className='status-btn';if(b.dataset.s===s)b.classList.add(s==='vu'?'active-vu':'active-aVoir');});
   document.getElementById('f-vu-fields').style.display=s==='vu'?'block':'none';
-}
-async function fetchTMDB(){
-  const title=document.getElementById('f-title').value.trim();
-  if(!title){alert('Entre d\'abord le titre');return;}
-  const btn=document.getElementById('tmdb-btn');
-  btn.textContent='⏳ Recherche…';btn.disabled=true;
-  const d=await fetchMovieData(title,document.getElementById('f-year').value);
-  btn.disabled=false;
-  if(!d||(!d.poster&&!d.desc)){btn.textContent='❌ Non trouvé';setTimeout(()=>btn.textContent='🎬 Récupérer affiche & synopsis',2000);return;}
-  if(d.poster)document.getElementById('f-poster').value=d.poster;
-  if(d.desc)document.getElementById('f-desc').value=d.desc;
-  btn.textContent='✅ Récupéré !';setTimeout(()=>btn.textContent='🎬 Récupérer affiche & synopsis',2000);
 }
 function openModal(id=null){
   editId=id;
@@ -1123,26 +1038,30 @@ function saveMovie(){
 
 render();
 
-// Initial cloud sync — never leaves the app with 0 movies
+// Initial cloud sync — merge cloud into local (cloud wins per-movie by id)
 (async()=>{
   if(!sb)return;
-  const snapshot=movies.slice(); // keep a copy in case we need to rollback
+  const snapshot=movies.slice();
   try{
     const cloud=await cloudFetchAll();
-    if(!cloud){return;} // fetch failed → keep local
-    const valid=cloud.filter(m=>m&&m.id&&m.title); // discard malformed rows
-    if(valid.length===0){
-      await cloudBulkInsert(snapshot); // cloud empty → seed it from local
+    if(!cloud){console.warn('[sb] fetch returned null');return;}
+    const valid=cloud.filter(m=>m&&m.id&&typeof m.title==='string'&&m.title);
+    console.log('[sb] cloud rows:',cloud.length,'valid:',valid.length);
+    if(!valid.length){
+      // Cloud empty or corrupted → push local up
+      await cloudBulkInsert(snapshot);
       return;
     }
-    movies=valid;
+    // Merge: cloud replaces local for matching ids, keep unique locals too
+    const byId=new Map(snapshot.map(m=>[m.id,m]));
+    valid.forEach(m=>byId.set(m.id,m));
+    movies=[...byId.values()].filter(m=>m&&m.title);
+    if(!movies.length){movies=snapshot;}
     save();
     render();
-    // Safety net: if render produced 0 cards, rollback
-    if(!movies.length){movies=snapshot;save();render();}
   }catch(e){
-    console.warn('[sb] sync',e);
-    movies=snapshot; // rollback on any error
+    console.warn('[sb] sync error',e);
+    movies=snapshot;
     save();
     render();
   }
