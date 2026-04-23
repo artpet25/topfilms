@@ -267,7 +267,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v8 · tmdb</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v9 · safe</p>
     </div>
   </div>
 </div>
@@ -613,7 +613,9 @@ async function cloudBulkInsert(list){if(!sb)return;try{await sb.from('movies').u
 // ── STATE ──────────────────────────────────────────────────────
 let tmdbCache = JSON.parse(localStorage.getItem('tc')||'{}');
 let movies = JSON.parse(localStorage.getItem('cj_v7')||'null');
-if(!movies){
+// Filter out corrupted rows (missing id or title) — v7 crash may have saved bad data
+if(Array.isArray(movies)) movies = movies.filter(m=>m&&m.id&&typeof m.title==='string'&&m.title);
+if(!movies||!movies.length){
   movies = SEED.map((m,i)=>({
     id:'seed_'+i, poster:'', backdrop:'', desc:'',
     notePenText:'', noteArtText:'', dateWatched:'', progress:0,
@@ -737,6 +739,7 @@ function render(){
   }).join('');
 
   let list=movies.filter(m=>{
+    if(!m||!m.title)return false;
     const mf=filter==='tous'||m.status===filter;
     const mq=!q||m.title.toLowerCase().includes(q)||(m.director||'').toLowerCase().includes(q)||(m.cat||'').toLowerCase().includes(q);
     const mcat=!catF||(m.cat||'').split(/[,/]/).map(c=>c.trim()).includes(catF);
