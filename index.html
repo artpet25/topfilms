@@ -265,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v10 · clean</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v11 · batch</p>
     </div>
   </div>
 </div>
@@ -338,10 +338,13 @@ input[type=range]{width:100%;accent-color:var(--accent);}
   </div>
   <button class="view-toggle" id="view-toggle-btn" onclick="toggleView()" title="Affichage affiches">🖼</button>
   <button class="view-toggle" id="chart-toggle-btn" onclick="toggleCharts()" title="Afficher graphes">📊</button>
+  <button class="view-toggle" id="fetch-posters-btn" onclick="fetchAllPosters()" title="Récupérer affiches">🎬</button>
 </div>
 
 <div class="list" id="list"></div>
 <button class="fab" onclick="openModal()">＋</button>
+
+<div id="poster-toast" style="display:none;position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:rgba(20,20,28,.95);color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;z-index:50;box-shadow:0 8px 28px rgba(0,0,0,.5);max-width:90vw;text-align:center;"></div>
 
 <!-- DETAIL -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetailOnBg(event)">
@@ -589,6 +592,56 @@ let filter='tous', sortKey='rank', sortDir=1, postersVisible=false, chartMonthFi
 // ── HELPERS ────────────────────────────────────────────────────
 function fmt(min){if(!min)return'—';return`${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;}
 function nd(n){if(n===null||n===undefined||n==='')return'—';return n+'/10';}
+
+// ── BATCH POSTER FETCH (manual, explicit) ─────────────────────
+const TMDB_KEY='0a96f8db300b6bcc2f86e83373a7e856';
+const TMDB_IMG='https://image.tmdb.org/t/p/w500';
+async function fetchOnePoster(title,year){
+  try{
+    const q=encodeURIComponent(title);
+    const url=`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${q}${year?'&year='+year:''}`;
+    const r=await fetch(url);
+    if(!r.ok)return null;
+    const d=await r.json();
+    if(!d.results||!d.results.length)return null;
+    const m=d.results[0];
+    return{
+      poster:m.poster_path?TMDB_IMG+m.poster_path:'',
+      backdrop:m.backdrop_path?TMDB_IMG+m.backdrop_path:'',
+      desc:m.overview||''
+    };
+  }catch(e){console.warn('[tmdb]',title,e);return null;}
+}
+function showToast(msg){const t=document.getElementById('poster-toast');t.textContent=msg;t.style.display='block';}
+function hideToast(){setTimeout(()=>{document.getElementById('poster-toast').style.display='none';},2500);}
+let fetchingPosters=false;
+async function fetchAllPosters(){
+  if(fetchingPosters){showToast('⏳ Déjà en cours…');hideToast();return;}
+  const todo=movies.filter(m=>m&&m.title&&!m.poster);
+  if(!todo.length){showToast('✅ Toutes les affiches sont déjà là');hideToast();return;}
+  if(!confirm(`Récupérer ${todo.length} affiches depuis TMDB ?\nCela peut prendre ~${Math.ceil(todo.length*0.3)}s.`))return;
+  fetchingPosters=true;
+  let done=0,found=0;
+  for(const m of todo){
+    done++;
+    showToast(`🎬 ${done}/${todo.length} — ${m.title}`);
+    const d=await fetchOnePoster(m.title,m.year);
+    if(d&&d.poster){
+      m.poster=d.poster;
+      m.backdrop=d.backdrop||d.poster;
+      if(!m.desc&&d.desc)m.desc=d.desc;
+      save();
+      cloudUpsert(m);
+      found++;
+    }
+    await new Promise(r=>setTimeout(r,250));
+  }
+  fetchingPosters=false;
+  if(found>0&&!postersVisible){postersVisible=true;}
+  render();
+  showToast(`✅ ${found}/${todo.length} affiches récupérées`);
+  hideToast();
+}
 
 // ── RENDER ────────────────────────────────────────────────────
 function setFilter(f,el){filter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
