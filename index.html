@@ -15,16 +15,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
-  --bg:#f7f7f2;--surface:#ffffff;--surface2:#f0f0ea;--surface3:#e8e8e0;
-  --border:rgba(0,0,0,0.08);--border-h:rgba(0,0,0,0.16);
-  --accent:#c4963a;--accent-dim:rgba(196,150,58,0.1);--accent-glow:rgba(196,150,58,0.2);
-  --text:#1a1a1a;--muted:#8a8880;--muted2:#5a5850;
-  --green:#27ae60;--green-dim:rgba(39,174,96,0.1);
-  --blue:#2980b9;--blue-dim:rgba(41,128,185,0.1);
-  --red:#e74c3c;--red-dim:rgba(231,76,60,0.1);
-  --purple:#8e44ad;
+  --bg:#0e0e12;--surface:#16161e;--surface2:#1e1e28;--surface3:#262632;
+  --border:rgba(255,255,255,0.07);--border-h:rgba(255,255,255,0.14);
+  --accent:#c4963a;--accent-dim:rgba(196,150,58,0.12);--accent-glow:rgba(196,150,58,0.28);
+  --text:#eeeef2;--muted:#828290;--muted2:#5a5a68;
+  --green:#2ecc71;--green-dim:rgba(46,204,113,0.12);
+  --blue:#3498db;--blue-dim:rgba(52,152,219,0.12);
+  --red:#e74c3c;--red-dim:rgba(231,76,60,0.12);
+  --purple:#9b59b6;
   --radius:14px;--radius-sm:9px;--radius-lg:22px;
-  --shadow:0 4px 20px rgba(0,0,0,0.12);
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
   --transition:.2s ease;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -265,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v11 · batch</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v12 · dark</p>
     </div>
   </div>
 </div>
@@ -293,6 +293,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div class="chart-tabs">
       <button id="chart-tab-0" class="chart-tab-btn" onclick="goToChart(0)" style="background:var(--accent);color:#0c0c12;border-color:var(--accent);font-weight:600;">📅 Par mois</button>
       <button id="chart-tab-1" class="chart-tab-btn" onclick="goToChart(1)">⏱ Heures</button>
+      <button id="chart-tab-2" class="chart-tab-btn" onclick="goToChart(2)">⭐ Notes</button>
     </div>
     <div id="chart-slide-0">
       <div class="chart-card">
@@ -308,6 +309,12 @@ input[type=range]{width:100%;accent-color:var(--accent);}
       <div class="chart-card">
         <div class="chart-title">Heures de films</div>
         <canvas id="chart-hours" height="110" style="width:100%;display:block;"></canvas>
+      </div>
+    </div>
+    <div id="chart-slide-2" style="display:none;">
+      <div class="chart-card">
+        <div class="chart-title">Notes moyennes</div>
+        <div id="avg-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:12px 0 4px;"></div>
       </div>
     </div>
   </div>
@@ -907,22 +914,46 @@ function drawChart(){
 let currentChart=0;
 function goToChart(idx){
   currentChart=idx;
-  document.getElementById('chart-slide-0').style.display=idx===0?'block':'none';
-  document.getElementById('chart-slide-1').style.display=idx===1?'block':'none';
-  const t0=document.getElementById('chart-tab-0');
-  const t1=document.getElementById('chart-tab-1');
-  if(t0&&t1){
-    t0.style.background=idx===0?'var(--accent)':'var(--surface2)';
-    t0.style.color=idx===0?'#0c0c0f':'var(--muted)';
-    t0.style.borderColor=idx===0?'var(--accent)':'var(--border)';
-    t0.style.fontWeight=idx===0?'600':'500';
-    t1.style.background=idx===1?'var(--accent)':'var(--surface2)';
-    t1.style.color=idx===1?'#0c0c0f':'var(--muted)';
-    t1.style.borderColor=idx===1?'var(--accent)':'var(--border)';
-    t1.style.fontWeight=idx===1?'600':'500';
-  }
+  [0,1,2].forEach(i=>{
+    const slide=document.getElementById('chart-slide-'+i);
+    const tab=document.getElementById('chart-tab-'+i);
+    if(slide) slide.style.display=i===idx?'block':'none';
+    if(tab){
+      tab.style.background=i===idx?'var(--accent)':'var(--surface2)';
+      tab.style.color=i===idx?'#0c0c0f':'var(--muted)';
+      tab.style.borderColor=i===idx?'var(--accent)':'var(--border)';
+      tab.style.fontWeight=i===idx?'600':'500';
+    }
+  });
   if(idx===0) setTimeout(drawChart,50);
-  else setTimeout(drawHoursChart,50);
+  else if(idx===1) setTimeout(drawHoursChart,50);
+  else drawAvgStats();
+}
+function drawAvgStats(){
+  const vu=movies.filter(m=>m.status==='vu');
+  const penMovies=vu.filter(m=>m.notePen!=null);
+  const artMovies=vu.filter(m=>m.noteArt!=null);
+  const bothMovies=vu.filter(m=>m.notePen!=null&&m.noteArt!=null);
+  const avgPen=penMovies.length?penMovies.reduce((s,m)=>s+m.notePen,0)/penMovies.length:null;
+  const avgArt=artMovies.length?artMovies.reduce((s,m)=>s+m.noteArt,0)/artMovies.length:null;
+  const avgTotal=bothMovies.length?bothMovies.reduce((s,m)=>s+m.notePen+m.noteArt,0)/bothMovies.length:null;
+  const f=n=>n!=null?n.toFixed(1):'—';
+  document.getElementById('avg-stats').innerHTML=`
+    <div style="background:var(--surface2);border-radius:10px;padding:14px 10px;text-align:center;">
+      <div style="font-size:22px;font-weight:700;color:var(--accent)">${f(avgPen)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Pen /10</div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:2px;">${penMovies.length} noté${penMovies.length>1?'s':''}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px 10px;text-align:center;">
+      <div style="font-size:22px;font-weight:700;color:var(--accent)">${f(avgArt)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Art /10</div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:2px;">${artMovies.length} noté${artMovies.length>1?'s':''}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px 10px;text-align:center;">
+      <div style="font-size:22px;font-weight:700;color:var(--accent)">${f(avgTotal)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Total /20</div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:2px;">${bothMovies.length} noté${bothMovies.length>1?'s':''}</div>
+    </div>`;
 }
 
 function initSwipe(){}
