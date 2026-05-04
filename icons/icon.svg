@@ -1,70 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <clipPath id="frame">
-      <rect width="512" height="512" rx="96"/>
-    </clipPath>
-  </defs>
-  <g clip-path="url(#frame)">
-    <!-- White background -->
-    <rect width="512" height="512" fill="#ffffff"/>
+  <!-- White rounded background -->
+  <rect width="512" height="512" rx="96" fill="#ffffff"/>
 
-    <!-- Bear ears outer -->
-    <circle cx="148" cy="160" r="56" fill="#111111"/>
-    <circle cx="364" cy="160" r="56" fill="#111111"/>
-    <!-- Bear ears inner -->
-    <circle cx="148" cy="166" r="28" fill="#555555"/>
-    <circle cx="364" cy="166" r="28" fill="#555555"/>
+  <!-- Bear ears (outer) -->
+  <circle cx="148" cy="168" r="54" fill="#5c3520"/>
+  <circle cx="364" cy="168" r="54" fill="#5c3520"/>
+  <!-- Bear ears (inner) -->
+  <circle cx="148" cy="174" r="28" fill="#e8b88f"/>
+  <circle cx="364" cy="174" r="28" fill="#e8b88f"/>
 
-    <!-- Bear head -->
-    <circle cx="256" cy="258" r="148" fill="#111111"/>
+  <!-- Bear head -->
+  <circle cx="256" cy="262" r="152" fill="#8b5a34"/>
 
-    <!-- Snout -->
-    <ellipse cx="256" cy="306" rx="72" ry="56" fill="#444444"/>
+  <!-- Cheek shading -->
+  <circle cx="175" cy="295" r="28" fill="#a06a42" opacity="0.5"/>
+  <circle cx="337" cy="295" r="28" fill="#a06a42" opacity="0.5"/>
 
-    <!-- Eyes -->
-    <circle cx="204" cy="232" r="20" fill="#ffffff"/>
-    <circle cx="308" cy="232" r="20" fill="#ffffff"/>
-    <!-- Pupils -->
-    <circle cx="208" cy="236" r="10" fill="#111111"/>
-    <circle cx="312" cy="236" r="10" fill="#111111"/>
-    <!-- Eye shine -->
-    <circle cx="212" cy="230" r="4" fill="#ffffff"/>
-    <circle cx="316" cy="230" r="4" fill="#ffffff"/>
+  <!-- Snout patch -->
+  <ellipse cx="256" cy="310" rx="72" ry="58" fill="#e8b88f"/>
 
-    <!-- Nose -->
-    <ellipse cx="256" cy="286" rx="22" ry="15" fill="#ffffff"/>
-    <ellipse cx="252" cy="282" rx="6" ry="4" fill="#111111" opacity="0.3"/>
+  <!-- Eyes -->
+  <circle cx="200" cy="238" r="18" fill="#1a0e06"/>
+  <circle cx="312" cy="238" r="18" fill="#1a0e06"/>
+  <circle cx="206" cy="232" r="6" fill="#ffffff"/>
+  <circle cx="318" cy="232" r="6" fill="#ffffff"/>
 
-    <!-- Mouth -->
-    <path d="M 256 302 L 256 318" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M 256 318 Q 234 336 218 326" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M 256 318 Q 278 336 294 326" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- Nose -->
+  <ellipse cx="256" cy="290" rx="22" ry="15" fill="#1a0e06"/>
+  <ellipse cx="252" cy="286" rx="5" ry="3" fill="#ffffff" opacity="0.5"/>
 
-    <!-- Paw (bottom right) -->
-    <ellipse cx="310" cy="440" rx="36" ry="26" fill="#111111"/>
+  <!-- Mouth -->
+  <path d="M 256 308 L 256 324" stroke="#1a0e06" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M 256 324 Q 232 344 216 332" stroke="#1a0e06" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M 256 324 Q 280 344 296 332" stroke="#1a0e06" stroke-width="5" fill="none" stroke-linecap="round"/>
 
+  <!-- Movie camera held up (bottom right corner) -->
+  <g>
+    <!-- Paw holding camera -->
+    <ellipse cx="296" cy="438" rx="32" ry="24" fill="#8b5a34"/>
+    <ellipse cx="296" cy="438" rx="18" ry="12" fill="#6b4426"/>
     <!-- Camera body -->
-    <rect x="326" y="374" width="130" height="82" rx="12" fill="#111111"/>
-    <!-- Camera top stripe -->
-    <rect x="326" y="374" width="130" height="18" rx="9" fill="#222222"/>
-
-    <!-- Camera lens -->
-    <circle cx="322" cy="415" r="32" fill="#333333"/>
-    <circle cx="322" cy="415" r="24" fill="#111111"/>
-    <circle cx="322" cy="415" r="12" fill="#444444"/>
-    <circle cx="316" cy="409" r="5" fill="#ffffff" opacity="0.6"/>
-
+    <rect x="315" y="380" width="130" height="80" rx="12" fill="#1a1a1a"/>
+    <rect x="315" y="380" width="130" height="16" rx="8" fill="#2a2a2a"/>
+    <!-- Lens -->
+    <circle cx="310" cy="420" r="30" fill="#2a2a2a"/>
+    <circle cx="310" cy="420" r="24" fill="#0a0a0a"/>
+    <circle cx="310" cy="420" r="10" fill="#c4963a"/>
+    <circle cx="304" cy="414" r="4" fill="#ffffff" opacity="0.7"/>
     <!-- Film reels on top -->
-    <circle cx="370" cy="364" r="26" fill="#333333"/>
-    <circle cx="370" cy="364" r="18" fill="#111111"/>
-    <circle cx="370" cy="364" r="5" fill="#555555"/>
-
-    <circle cx="418" cy="364" r="20" fill="#333333"/>
-    <circle cx="418" cy="364" r="13" fill="#111111"/>
-    <circle cx="418" cy="364" r="4" fill="#555555"/>
-
+    <circle cx="360" cy="370" r="24" fill="#2a2a2a"/>
+    <circle cx="360" cy="370" r="18" fill="#1a1a1a"/>
+    <circle cx="360" cy="370" r="4" fill="#c4963a"/>
+    <circle cx="410" cy="370" r="18" fill="#2a2a2a"/>
+    <circle cx="410" cy="370" r="13" fill="#1a1a1a"/>
+    <circle cx="410" cy="370" r="3" fill="#c4963a"/>
     <!-- Rec light -->
-    <circle cx="440" cy="400" r="6" fill="#111111"/>
-    <circle cx="440" cy="400" r="3" fill="#333333"/>
+    <circle cx="428" cy="408" r="6" fill="#e74c3c"/>
+    <circle cx="426" cy="406" r="2" fill="#ffffff" opacity="0.8"/>
   </g>
 </svg>
