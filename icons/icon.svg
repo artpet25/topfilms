@@ -5,79 +5,66 @@
     </clipPath>
   </defs>
   <g clip-path="url(#frame)">
-    <!-- Black background -->
-    <rect width="512" height="512" fill="#111111"/>
+    <!-- White background -->
+    <rect width="512" height="512" fill="#ffffff"/>
 
     <!-- Bear ears outer -->
-    <circle cx="150" cy="152" r="54" fill="#ffffff"/>
-    <circle cx="362" cy="152" r="54" fill="#ffffff"/>
+    <circle cx="148" cy="160" r="56" fill="#111111"/>
+    <circle cx="364" cy="160" r="56" fill="#111111"/>
     <!-- Bear ears inner -->
-    <circle cx="150" cy="157" r="30" fill="#333333"/>
-    <circle cx="362" cy="157" r="30" fill="#333333"/>
+    <circle cx="148" cy="166" r="28" fill="#555555"/>
+    <circle cx="364" cy="166" r="28" fill="#555555"/>
 
     <!-- Bear head -->
-    <circle cx="256" cy="232" r="142" fill="#ffffff"/>
+    <circle cx="256" cy="258" r="148" fill="#111111"/>
 
     <!-- Snout -->
-    <ellipse cx="256" cy="282" rx="66" ry="52" fill="#dddddd"/>
+    <ellipse cx="256" cy="306" rx="72" ry="56" fill="#444444"/>
 
     <!-- Eyes -->
-    <circle cx="206" cy="212" r="20" fill="#111111"/>
-    <circle cx="306" cy="212" r="20" fill="#111111"/>
+    <circle cx="204" cy="232" r="20" fill="#ffffff"/>
+    <circle cx="308" cy="232" r="20" fill="#ffffff"/>
+    <!-- Pupils -->
+    <circle cx="208" cy="236" r="10" fill="#111111"/>
+    <circle cx="312" cy="236" r="10" fill="#111111"/>
     <!-- Eye shine -->
-    <circle cx="213" cy="206" r="7" fill="#ffffff"/>
-    <circle cx="313" cy="206" r="7" fill="#ffffff"/>
+    <circle cx="212" cy="230" r="4" fill="#ffffff"/>
+    <circle cx="316" cy="230" r="4" fill="#ffffff"/>
 
     <!-- Nose -->
-    <ellipse cx="256" cy="264" rx="20" ry="14" fill="#111111"/>
-    <ellipse cx="252" cy="260" rx="5" ry="3" fill="#ffffff" opacity="0.4"/>
+    <ellipse cx="256" cy="286" rx="22" ry="15" fill="#ffffff"/>
+    <ellipse cx="252" cy="282" rx="6" ry="4" fill="#111111" opacity="0.3"/>
 
     <!-- Mouth -->
-    <path d="M 256 280 L 256 294" stroke="#111111" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M 256 294 Q 234 312 218 302" stroke="#111111" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M 256 294 Q 278 312 294 302" stroke="#111111" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M 256 302 L 256 318" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M 256 318 Q 234 336 218 326" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M 256 318 Q 278 336 294 326" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round"/>
 
-    <!-- Film strip (pellicule) bottom band -->
-    <rect x="0" y="374" width="512" height="138" fill="#1e1e1e"/>
+    <!-- Paw (bottom right) -->
+    <ellipse cx="310" cy="440" rx="36" ry="26" fill="#111111"/>
 
-    <!-- Perforation strip top -->
-    <rect x="0" y="374" width="512" height="30" fill="#141414"/>
-    <!-- Perforations top row -->
-    <rect x="16"  y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="56"  y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="96"  y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="136" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="176" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="216" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="256" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="296" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="336" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="376" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="416" y="381" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="456" y="381" width="22" height="16" rx="3" fill="#111111"/>
+    <!-- Camera body -->
+    <rect x="326" y="374" width="130" height="82" rx="12" fill="#111111"/>
+    <!-- Camera top stripe -->
+    <rect x="326" y="374" width="130" height="18" rx="9" fill="#222222"/>
 
-    <!-- Perforation strip bottom -->
-    <rect x="0" y="482" width="512" height="30" fill="#141414"/>
-    <!-- Perforations bottom row -->
-    <rect x="16"  y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="56"  y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="96"  y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="136" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="176" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="216" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="256" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="296" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="336" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="376" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="416" y="489" width="22" height="16" rx="3" fill="#111111"/>
-    <rect x="456" y="489" width="22" height="16" rx="3" fill="#111111"/>
+    <!-- Camera lens -->
+    <circle cx="322" cy="415" r="32" fill="#333333"/>
+    <circle cx="322" cy="415" r="24" fill="#111111"/>
+    <circle cx="322" cy="415" r="12" fill="#444444"/>
+    <circle cx="316" cy="409" r="5" fill="#ffffff" opacity="0.6"/>
 
-    <!-- Film frame dividers -->
-    <rect x="128" y="404" width="2" height="78" fill="#383838"/>
-    <rect x="256" y="404" width="2" height="78" fill="#383838"/>
-    <rect x="384" y="404" width="2" height="78" fill="#383838"/>
+    <!-- Film reels on top -->
+    <circle cx="370" cy="364" r="26" fill="#333333"/>
+    <circle cx="370" cy="364" r="18" fill="#111111"/>
+    <circle cx="370" cy="364" r="5" fill="#555555"/>
 
-    <!-- Frame highlights (middle frame) -->
-    <rect x="258" y="404" width="126" height="78" fill="#2a2a2a"/>
+    <circle cx="418" cy="364" r="20" fill="#333333"/>
+    <circle cx="418" cy="364" r="13" fill="#111111"/>
+    <circle cx="418" cy="364" r="4" fill="#555555"/>
+
+    <!-- Rec light -->
+    <circle cx="440" cy="400" r="6" fill="#111111"/>
+    <circle cx="440" cy="400" r="3" fill="#333333"/>
   </g>
 </svg>
