@@ -265,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v17 · fix year</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v18 · retry queue</p>
     </div>
     <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
@@ -578,8 +578,14 @@ const REV_MAP=Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
 const NUM_FIELDS=new Set(['year','runtime','rank','progress','note_pen','note_art']);
 function toDb(m){const o={};for(const k in m){let v=m[k];let dk=k;if(k==='id'||['title','director','year','runtime','rank','cat','plat','status','emoji','poster','backdrop','progress'].includes(k))dk=k;else if(FIELD_MAP[k])dk=FIELD_MAP[k];else continue;if(NUM_FIELDS.has(dk)&&(v===''||v===undefined))v=null;o[dk]=v;}return o;}
 function fromDb(r){const o={};for(const k in r){if(k==='updated_at')continue;o[REV_MAP[k]||k]=r[k];}return o;}
-async function cloudUpsert(m){if(!sb){setSyncBadge('err','SDK KO');return;}setSyncBadge('load','envoi…');try{const{error}=await sb.from('movies').upsert(toDb(m));if(error)throw error;setSyncBadge('ok','synchro '+new Date().toLocaleTimeString().slice(0,5));syncLog('UPSERT OK "'+m.title+'"');}catch(e){setSyncBadge('err','upsert KO');syncLog('UPSERT ERR "'+m.title+'": '+(e.message||e));}}
-async function cloudDelete(id){if(!sb)return;try{const{error}=await sb.from('movies').delete().eq('id',id);if(error)throw error;syncLog('DELETE OK id='+id);}catch(e){syncLog('DELETE ERR id='+id+': '+(e.message||e));}}
+const PENDING_KEY='cj_pending_v1';
+function loadPending(){try{return JSON.parse(localStorage.getItem(PENDING_KEY)||'{}');}catch(e){return{};}}
+function savePending(p){localStorage.setItem(PENDING_KEY,JSON.stringify(p));}
+function updateBadgePending(){const n=Object.keys(loadPending()).length;if(n>0)setSyncBadge('warn',n+' en attente');}
+async function trySbUpsert(m,attempt=1){const{error}=await sb.from('movies').upsert(toDb(m));if(error)throw error;return true;}
+async function cloudUpsert(m){if(!sb){setSyncBadge('err','SDK KO');return;}setSyncBadge('load','envoi…');let lastErr=null;for(let i=1;i<=3;i++){try{await trySbUpsert(m);const p=loadPending();delete p[m.id];savePending(p);const n=Object.keys(p).length;if(n>0)setSyncBadge('warn',n+' en attente');else setSyncBadge('ok','synchro '+new Date().toLocaleTimeString().slice(0,5));syncLog('UPSERT OK "'+m.title+'"'+(i>1?' (essai '+i+')':''));return;}catch(e){lastErr=e;syncLog('UPSERT retry '+i+'/3 "'+m.title+'": '+(e.message||e));if(i<3)await new Promise(r=>setTimeout(r,500*i));}}const p=loadPending();p[m.id]=m;savePending(p);setSyncBadge('warn',Object.keys(p).length+' en attente');syncLog('UPSERT KO "'+m.title+'" (mis en file): '+(lastErr?.message||lastErr));}
+async function drainPending(){const p=loadPending();const ids=Object.keys(p);if(!ids.length)return;syncLog('Drain '+ids.length+' pending…');for(const id of ids){await cloudUpsert(p[id]);}}
+async function cloudDelete(id){if(!sb)return;const p=loadPending();if(p[id]){delete p[id];savePending(p);}try{const{error}=await sb.from('movies').delete().eq('id',id);if(error)throw error;syncLog('DELETE OK id='+id);}catch(e){syncLog('DELETE ERR id='+id+': '+(e.message||e));}}
 async function cloudFetchAll(){if(!sb)return null;try{const{data,error}=await sb.from('movies').select('*');if(error)throw error;syncLog('FETCH OK '+data.length+' rows');return data.map(fromDb);}catch(e){setSyncBadge('err','fetch KO');syncLog('FETCH ERR: '+(e.message||e));return null;}}
 async function cloudBulkInsert(list){if(!sb)return;try{const{error}=await sb.from('movies').upsert(list.map(toDb));if(error)throw error;syncLog('BULK OK '+list.length+' rows');}catch(e){syncLog('BULK ERR: '+(e.message||e));}}
 
@@ -1149,6 +1155,7 @@ render();
     if(!movies.length){movies=snapshot;}
     save();
     render();
+    drainPending();
   }catch(e){
     console.warn('[sb] sync error',e);
     movies=snapshot;
@@ -1156,6 +1163,9 @@ render();
     render();
   }
 })();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)drainPending();});
+window.addEventListener('online',drainPending);
+updateBadgePending();
 
 function exportData(){
   const data = { exported: new Date().toISOString(), movies: movies };
