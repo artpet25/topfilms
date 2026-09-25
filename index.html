@@ -265,8 +265,9 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v15 · logo</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v16 · sync-debug</p>
     </div>
+    <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
 </div>
 
@@ -568,14 +569,18 @@ const SEED=[
 const SUPABASE_URL='https://jmqzkaiynffuibpuvoqz.supabase.co';
 const SUPABASE_KEY='sb_publishable_3j98iINpvqmz0WybzhDxwg_vg-pYw-g';
 let sb=null;try{if(window.supabase)sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.warn('[sb] init',e);}
+window.__syncLog='';
+function setSyncBadge(state,txt){const el=document.getElementById('syncBadge');if(!el)return;const map={ok:['#d1f5d3','#0a7a1e','✅'],err:['#ffd7d7','#a10a0a','❌'],load:['#fff3cd','#7a5a0a','⏳'],warn:['#ffe4b5','#7a4a0a','⚠️']};const[bg,fg,ic]=map[state]||map.load;el.style.background=bg;el.style.color=fg;el.textContent=ic+' '+txt;}
+function syncLog(msg){window.__syncLog=new Date().toLocaleTimeString()+' '+msg+'\n'+(window.__syncLog||'').slice(0,2000);}
+if(!sb){setSyncBadge('err','SDK KO');syncLog('Supabase SDK non chargé');}else{setSyncBadge('load','init OK');syncLog('SDK initialisé');}
 const FIELD_MAP={dateWatched:'date_watched',desc:'description',notePen:'note_pen',noteArt:'note_art',notePenText:'note_pen_text',noteArtText:'note_art_text'};
 const REV_MAP=Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
 function toDb(m){const o={};for(const k in m){if(k==='id'||['title','director','year','runtime','rank','cat','plat','status','emoji','poster','backdrop','progress'].includes(k))o[k]=m[k];else if(FIELD_MAP[k])o[FIELD_MAP[k]]=m[k];}return o;}
 function fromDb(r){const o={};for(const k in r){if(k==='updated_at')continue;o[REV_MAP[k]||k]=r[k];}return o;}
-async function cloudUpsert(m){if(!sb)return;try{await sb.from('movies').upsert(toDb(m));}catch(e){console.warn('[sb] upsert',e);}}
-async function cloudDelete(id){if(!sb)return;try{await sb.from('movies').delete().eq('id',id);}catch(e){console.warn('[sb] del',e);}}
-async function cloudFetchAll(){if(!sb)return null;try{const{data,error}=await sb.from('movies').select('*');if(error)throw error;return data.map(fromDb);}catch(e){console.warn('[sb] fetch',e);return null;}}
-async function cloudBulkInsert(list){if(!sb)return;try{await sb.from('movies').upsert(list.map(toDb));}catch(e){console.warn('[sb] bulk',e);}}
+async function cloudUpsert(m){if(!sb){setSyncBadge('err','SDK KO');return;}setSyncBadge('load','envoi…');try{const{error}=await sb.from('movies').upsert(toDb(m));if(error)throw error;setSyncBadge('ok','synchro '+new Date().toLocaleTimeString().slice(0,5));syncLog('UPSERT OK "'+m.title+'"');}catch(e){setSyncBadge('err','upsert KO');syncLog('UPSERT ERR "'+m.title+'": '+(e.message||e));}}
+async function cloudDelete(id){if(!sb)return;try{const{error}=await sb.from('movies').delete().eq('id',id);if(error)throw error;syncLog('DELETE OK id='+id);}catch(e){syncLog('DELETE ERR id='+id+': '+(e.message||e));}}
+async function cloudFetchAll(){if(!sb)return null;try{const{data,error}=await sb.from('movies').select('*');if(error)throw error;syncLog('FETCH OK '+data.length+' rows');return data.map(fromDb);}catch(e){setSyncBadge('err','fetch KO');syncLog('FETCH ERR: '+(e.message||e));return null;}}
+async function cloudBulkInsert(list){if(!sb)return;try{const{error}=await sb.from('movies').upsert(list.map(toDb));if(error)throw error;syncLog('BULK OK '+list.length+' rows');}catch(e){syncLog('BULK ERR: '+(e.message||e));}}
 
 // ── STATE ──────────────────────────────────────────────────────
 // Bumped key to cj_v10 — forces fresh start, bypasses any corrupted v7 cache
