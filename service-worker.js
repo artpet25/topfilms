@@ -1,4 +1,4 @@
-const CACHE_NAME = 'films-nounous-v16';
+const CACHE_NAME = 'films-nounous-v17';
 
 const PRECACHE_ASSETS = [
   '/topfilms/',

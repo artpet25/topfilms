@@ -265,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v16 · sync-debug</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v17 · fix year</p>
     </div>
     <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
@@ -575,7 +575,8 @@ function syncLog(msg){window.__syncLog=new Date().toLocaleTimeString()+' '+msg+'
 if(!sb){setSyncBadge('err','SDK KO');syncLog('Supabase SDK non chargé');}else{setSyncBadge('load','init OK');syncLog('SDK initialisé');}
 const FIELD_MAP={dateWatched:'date_watched',desc:'description',notePen:'note_pen',noteArt:'note_art',notePenText:'note_pen_text',noteArtText:'note_art_text'};
 const REV_MAP=Object.fromEntries(Object.entries(FIELD_MAP).map(([k,v])=>[v,k]));
-function toDb(m){const o={};for(const k in m){if(k==='id'||['title','director','year','runtime','rank','cat','plat','status','emoji','poster','backdrop','progress'].includes(k))o[k]=m[k];else if(FIELD_MAP[k])o[FIELD_MAP[k]]=m[k];}return o;}
+const NUM_FIELDS=new Set(['year','runtime','rank','progress','note_pen','note_art']);
+function toDb(m){const o={};for(const k in m){let v=m[k];let dk=k;if(k==='id'||['title','director','year','runtime','rank','cat','plat','status','emoji','poster','backdrop','progress'].includes(k))dk=k;else if(FIELD_MAP[k])dk=FIELD_MAP[k];else continue;if(NUM_FIELDS.has(dk)&&(v===''||v===undefined))v=null;o[dk]=v;}return o;}
 function fromDb(r){const o={};for(const k in r){if(k==='updated_at')continue;o[REV_MAP[k]||k]=r[k];}return o;}
 async function cloudUpsert(m){if(!sb){setSyncBadge('err','SDK KO');return;}setSyncBadge('load','envoi…');try{const{error}=await sb.from('movies').upsert(toDb(m));if(error)throw error;setSyncBadge('ok','synchro '+new Date().toLocaleTimeString().slice(0,5));syncLog('UPSERT OK "'+m.title+'"');}catch(e){setSyncBadge('err','upsert KO');syncLog('UPSERT ERR "'+m.title+'": '+(e.message||e));}}
 async function cloudDelete(id){if(!sb)return;try{const{error}=await sb.from('movies').delete().eq('id',id);if(error)throw error;syncLog('DELETE OK id='+id);}catch(e){syncLog('DELETE ERR id='+id+': '+(e.message||e));}}
@@ -1104,7 +1105,7 @@ function saveMovie(){
   const m={
     id:editId||Date.now().toString(),title,
     director:document.getElementById('f-director').value.trim(),
-    year:document.getElementById('f-year').value,
+    year:parseInt(document.getElementById('f-year').value)||null,
     runtime:parseInt(document.getElementById('f-runtime').value)||null,
     rank:parseInt(document.getElementById('f-rank').value)||null,
     cat:document.getElementById('f-cat').value.trim(),
