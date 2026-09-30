@@ -265,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v19 · tri A-Z</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v20 · tri plateforme</p>
     </div>
     <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
@@ -344,6 +344,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div class="sort-btn" onclick="setSort('noteTotal',this)">Total ↓</div>
     <div class="sort-btn" onclick="setSort('runtime',this)">Durée</div>
     <div class="sort-btn" onclick="setSort('title',this)">A-Z</div>
+    <div class="sort-btn" onclick="setSort('plat',this)">Plateforme</div>
   </div>
   <button class="view-toggle" id="view-toggle-btn" onclick="toggleView()" title="Affichage affiches">🖼</button>
   <button class="view-toggle" id="chart-toggle-btn" onclick="toggleCharts()" title="Afficher graphes">📊</button>
@@ -759,6 +760,7 @@ function render(){
     else if(sortKey==='noteTotal'){const ta=(a.notePen!=null&&a.noteArt!=null)?a.notePen+a.noteArt:-999;const tb=(b.notePen!=null&&b.noteArt!=null)?b.notePen+b.noteArt:-999;diff=ta-tb;}
     else if(sortKey==='runtime') diff=(a.runtime||0)-(b.runtime||0);
     else if(sortKey==='title') diff=(a.title||'').localeCompare(b.title||'','fr',{sensitivity:'base'});
+    else if(sortKey==='plat'){const pa=(a.plat||'').trim(),pb=(b.plat||'').trim();if(!pa&&pb)diff=1;else if(pa&&!pb)diff=-1;else diff=pa.localeCompare(pb,'fr',{sensitivity:'base'})||(a.title||'').localeCompare(b.title||'','fr',{sensitivity:'base'});}
     return diff*sortDir;
   });
 
