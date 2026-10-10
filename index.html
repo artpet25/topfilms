@@ -175,6 +175,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .compact-director{display:none;font-size:11px;color:var(--muted);font-style:italic;margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%;}
 body.show-dir .no-poster .compact-director{display:inline-block;}
 body.show-dir .no-poster .movie-card .movie-title{max-width:55%;}
+body.hide-notes .compact-note{display:none!important;}
+body.hide-notes .no-poster .notes-row{display:none!important;}
+body.hide-plat .compact-plat{display:none!important;}
+body.hide-plat .tag-plat{display:none!important;}
 .compact-meta{display:none;gap:5px;align-items:center;flex-shrink:0;}
 .no-poster .compact-meta{display:flex;}
 .compact-note{font-size:10px;color:var(--muted);background:var(--surface2);border-radius:5px;padding:1px 6px;}
@@ -268,7 +272,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v21 · réa + chart</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v22 · toggles + big chart</p>
     </div>
     <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
@@ -305,7 +309,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
           <div class="chart-title">Films vus par mois</div>
           <div id="chart-filter-label" style="font-size:10px;color:var(--accent);display:none;cursor:pointer;" onclick="clearChartFilter()">✕ Effacer filtre</div>
         </div>
-        <canvas id="chart" height="110" style="width:100%;display:block;cursor:pointer;"></canvas>
+        <canvas id="chart" height="260" style="width:100%;display:block;cursor:pointer;"></canvas>
         <div id="chart-empty" style="display:none;text-align:center;font-size:12px;color:var(--muted);padding:16px 0;">Aucune date renseignée</div>
       </div>
     </div>
@@ -350,6 +354,8 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div class="sort-btn" onclick="setSort('plat',this)">Plateforme</div>
     <div class="sort-btn" onclick="setSort('director',this)">Réalisateur</div>
     <div class="sort-btn" onclick="toggleDirectors(this)" title="Afficher les réalisateurs">🎥 Réa</div>
+    <div class="sort-btn" onclick="toggleNotes(this)" title="Afficher les notes">⭐ Notes</div>
+    <div class="sort-btn" onclick="togglePlat(this)" title="Afficher les plateformes">📺 Plat</div>
   </div>
   <button class="view-toggle" id="view-toggle-btn" onclick="toggleView()" title="Affichage affiches">🖼</button>
   <button class="view-toggle" id="chart-toggle-btn" onclick="toggleCharts()" title="Afficher graphes">📊</button>
@@ -615,7 +621,11 @@ function saveOne(m){save();cloudUpsert(m);}
 
 let filter='tous', sortKey='rank', sortDir=1, postersVisible=false, chartMonthFilter='', chartsVisible=true, detailId=null, editId=null, currentStatus='à voir';
 let showDirectors=localStorage.getItem('cj_show_dir')==='1';
+let showNotes=localStorage.getItem('cj_show_notes')!=='0';
+let showPlat=localStorage.getItem('cj_show_plat')!=='0';
 function toggleDirectors(btn){showDirectors=!showDirectors;localStorage.setItem('cj_show_dir',showDirectors?'1':'0');btn.classList.toggle('active',showDirectors);document.body.classList.toggle('show-dir',showDirectors);render();}
+function toggleNotes(btn){showNotes=!showNotes;localStorage.setItem('cj_show_notes',showNotes?'1':'0');btn.classList.toggle('active',showNotes);document.body.classList.toggle('hide-notes',!showNotes);render();}
+function togglePlat(btn){showPlat=!showPlat;localStorage.setItem('cj_show_plat',showPlat?'1':'0');btn.classList.toggle('active',showPlat);document.body.classList.toggle('hide-plat',!showPlat);render();}
 
 // ── HELPERS ────────────────────────────────────────────────────
 function fmt(min){if(!min)return'—';return`${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;}
@@ -857,13 +867,14 @@ function drawChart(){
   const dpr=window.devicePixelRatio||1;
   const W=canvas.parentElement.offsetWidth-28;
   const n=keys.length;
-  const H=n>12?170:140;
+  const H=Math.max(260,Math.min(340,180+n*4));
   const labelStep=n<=8?1:n<=14?2:n<=24?3:Math.ceil(n/8);
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   const ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
-  const pad={top:18,right:14,bottom:28,left:22};
+  const needsRotateEst=W/n<42&&n>8;
+  const pad={top:20,right:14,bottom:needsRotateEst?48:30,left:26};
   const cw=W-pad.left-pad.right;
   const ch=H-pad.top-pad.bottom;
   const maxVal=Math.max(...cumData,1);
@@ -887,9 +898,9 @@ function drawChart(){
     else ctx.rect(x,y,barW,bh);
     ctx.fill();
     if(barData[i]>0&&slotW>=14){
-      ctx.fillStyle='rgba(139,100,20,0.85)';
-      ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-      ctx.fillText(barData[i],x+barW/2,y-3);
+      ctx.fillStyle='rgba(139,100,20,0.9)';
+      ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+      ctx.fillText(barData[i],x+barW/2,y-4);
     }
   });
   // Line
@@ -912,20 +923,20 @@ function drawChart(){
     }
   });
   // X labels (adaptive — skip some if too crowded)
-  ctx.fillStyle='rgba(100,98,110,0.9)';ctx.font='9px sans-serif';ctx.textAlign='center';
-  const needsRotate=slotW<32&&n>10;
+  ctx.fillStyle='rgba(70,68,80,0.95)';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+  const needsRotate=slotW<42&&n>8;
   labels.forEach((l,i)=>{
     if(i%labelStep!==0&&i!==n-1)return;
     const x=pad.left+i*slotW+slotW/2;
     if(needsRotate){
       ctx.save();
-      ctx.translate(x,H-6);
+      ctx.translate(x,H-8);
       ctx.rotate(-Math.PI/4);
       ctx.textAlign='right';
       ctx.fillText(l,0,0);
       ctx.restore();
     } else {
-      ctx.fillText(l,x,H-6);
+      ctx.fillText(l,x,H-8);
     }
   });
 
@@ -1191,7 +1202,12 @@ render();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)drainPending();});
 window.addEventListener('online',drainPending);
 updateBadgePending();
-if(showDirectors){document.body.classList.add('show-dir');const b=[...document.querySelectorAll('.sort-btn')].find(x=>x.textContent.includes('🎥'));if(b)b.classList.add('active');}
+(function(){
+  const btns=[...document.querySelectorAll('.sort-btn')];
+  if(showDirectors){document.body.classList.add('show-dir');const b=btns.find(x=>x.textContent.includes('🎥'));if(b)b.classList.add('active');}
+  if(!showNotes){document.body.classList.add('hide-notes');}else{const b=btns.find(x=>x.textContent.includes('⭐'));if(b)b.classList.add('active');}
+  if(!showPlat){document.body.classList.add('hide-plat');}else{const b=btns.find(x=>x.textContent.includes('📺'));if(b)b.classList.add('active');}
+})();
 
 function exportData(){
   const data = { exported: new Date().toISOString(), movies: movies };
