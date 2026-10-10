@@ -172,9 +172,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .no-poster .movie-card .movie-desc{display:none!important;}
 .no-poster .movie-card .movie-info{padding-right:32px;display:flex;align-items:center;gap:8px;min-width:0;flex-direction:row;}
 .no-poster .movie-card .movie-title{font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:0;flex:1;}
-.compact-director{display:none;font-size:11px;color:var(--muted);font-style:italic;margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%;}
-body.show-dir .no-poster .compact-director{display:inline-block;}
-body.show-dir .no-poster .movie-card .movie-title{max-width:55%;}
+.compact-director{display:none;}
+body.show-dir .no-poster .movie-card .movie-info{flex-direction:column;align-items:flex-start;gap:2px;padding-right:32px;}
+body.show-dir .no-poster .movie-card{padding-top:8px;padding-bottom:8px;}
+body.show-dir .no-poster .movie-card .movie-title{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+body.show-dir .no-poster .compact-director{display:block;font-size:11px;color:var(--muted);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.1;}
+body.show-dir .no-poster .compact-meta{margin-top:1px;}
 body.hide-notes .compact-note{display:none!important;}
 body.hide-notes .no-poster .notes-row{display:none!important;}
 body.hide-plat .compact-plat{display:none!important;}
@@ -272,7 +275,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v22 · toggles + big chart</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v23 · réa ligne + chart clean</p>
     </div>
     <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
@@ -699,6 +702,8 @@ function setSort(k,el){
   document.querySelectorAll('.sort-btn').forEach(b=>{b.classList.remove('active');b.textContent=b.textContent.replace(' ↑','').replace(' ↓','');});
   el.classList.add('active');
   el.textContent=el.textContent.replace(' ↑','').replace(' ↓','')+(sortDir===1?' ↓':' ↑');
+  // Auto-reveal column that we are sorting by
+  if(k==='director'&&!showDirectors){showDirectors=true;localStorage.setItem('cj_show_dir','1');document.body.classList.add('show-dir');const b=[...document.querySelectorAll('.sort-btn')].find(x=>x.textContent.includes('🎥'));if(b)b.classList.add('active');}
   render();
 }
 function toggleView(){
@@ -818,7 +823,8 @@ function render(){
       ${m.rank?`<div class="rank-badge">#${m.rank}</div>`:''}
       ${poster}
       <div class="movie-info">
-        <div class="movie-title">${m.title}${m.director?`<span class="compact-director">· ${m.director}</span>`:''}</div>
+        <div class="movie-title">${m.title}</div>
+        ${m.director?`<div class="compact-director">🎥 ${m.director}</div>`:''}
         ${compactMeta}
         <div class="movie-sub">${[m.director,m.year].filter(Boolean).join(' · ')}</div>
         <div class="tags-row">${catTag}${platTag}<span class="tag ${tc}">${tl}</span></div>
@@ -867,14 +873,15 @@ function drawChart(){
   const dpr=window.devicePixelRatio||1;
   const W=canvas.parentElement.offsetWidth-28;
   const n=keys.length;
-  const H=Math.max(260,Math.min(340,180+n*4));
-  const labelStep=n<=8?1:n<=14?2:n<=24?3:Math.ceil(n/8);
+  const H=Math.max(260,Math.min(360,200+n*4));
+  // Target max ~7 labels on screen
+  const maxLabels=Math.max(5,Math.min(7,Math.floor(W/50)));
+  const labelStep=Math.max(1,Math.ceil(n/maxLabels));
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   const ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
-  const needsRotateEst=W/n<42&&n>8;
-  const pad={top:20,right:14,bottom:needsRotateEst?48:30,left:26};
+  const pad={top:22,right:14,bottom:36,left:26};
   const cw=W-pad.left-pad.right;
   const ch=H-pad.top-pad.bottom;
   const maxVal=Math.max(...cumData,1);
@@ -922,23 +929,15 @@ function drawChart(){
       ctx.fillText(cumData[i]+' vus',x,y-8);
     }
   });
-  // X labels (adaptive — skip some if too crowded)
-  ctx.fillStyle='rgba(70,68,80,0.95)';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
-  const needsRotate=slotW<42&&n>8;
+  // X labels (adaptive — horizontal, well-spaced, no overlap)
+  ctx.fillStyle='rgba(60,58,70,0.95)';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  const yLabel=H-pad.bottom/2+2;
   labels.forEach((l,i)=>{
     if(i%labelStep!==0&&i!==n-1)return;
     const x=pad.left+i*slotW+slotW/2;
-    if(needsRotate){
-      ctx.save();
-      ctx.translate(x,H-8);
-      ctx.rotate(-Math.PI/4);
-      ctx.textAlign='right';
-      ctx.fillText(l,0,0);
-      ctx.restore();
-    } else {
-      ctx.fillText(l,x,H-8);
-    }
+    ctx.fillText(l,x,yLabel);
   });
+  ctx.textBaseline='alphabetic';
 
   // Click handler for month filter
   canvas.onclick=function(e){
