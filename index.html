@@ -67,11 +67,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 /* ── CHARTS ── */
 #charts-section{padding:0 20px 10px;}
 .chart-tabs{display:flex;gap:6px;margin-bottom:10px;}
-.chart-range-tabs{display:flex;gap:6px;margin-bottom:10px;justify-content:center;}
-.chart-range-btn{padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;}
-.chart-range-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-#chart-scroll::-webkit-scrollbar{height:4px;}
-#chart-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:2px;}
 .chart-tab-btn{
   flex:1;padding:7px;border-radius:var(--radius-sm);
   border:1px solid var(--border);background:var(--surface2);
@@ -280,7 +275,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
     <div>
       <h1>🎬 Films des Nounous</h1>
       <p id="subtitle">Ton suivi de films personnel</p>
-      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v24 · chart périodes</p>
+      <p style="font-size:9px;color:var(--muted);opacity:.5;margin-top:2px;">v25 · chart 12 mois</p>
     </div>
     <div id="syncBadge" onclick="alert(window.__syncLog||'Pas encore de log')" style="cursor:pointer;font-size:11px;padding:6px 10px;border-radius:12px;background:#eee;color:#333;font-weight:600;white-space:nowrap;">⏳ init</div>
   </div>
@@ -317,14 +312,7 @@ input[type=range]{width:100%;accent-color:var(--accent);}
           <div class="chart-title">Films vus par mois</div>
           <div id="chart-filter-label" style="font-size:10px;color:var(--accent);display:none;cursor:pointer;" onclick="clearChartFilter()">✕ Effacer filtre</div>
         </div>
-        <div class="chart-range-tabs">
-          <button class="chart-range-btn" data-range="6" onclick="setChartRange(6,this)">6 mois</button>
-          <button class="chart-range-btn active" data-range="12" onclick="setChartRange(12,this)">12 mois</button>
-          <button class="chart-range-btn" data-range="all" onclick="setChartRange('all',this)">Tout</button>
-        </div>
-        <div id="chart-scroll" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;">
-          <canvas id="chart" height="260" style="display:block;cursor:pointer;"></canvas>
-        </div>
+        <canvas id="chart" height="260" style="width:100%;display:block;cursor:pointer;"></canvas>
         <div id="chart-empty" style="display:none;text-align:center;font-size:12px;color:var(--muted);padding:16px 0;">Aucune date renseignée</div>
       </div>
     </div>
@@ -866,8 +854,6 @@ function updateStats(){
 }
 
 // ── CHART ─────────────────────────────────────────────────────
-let chartRange=12;
-function setChartRange(r,el){chartRange=r;document.querySelectorAll('.chart-range-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');drawChart();}
 function drawChart(){
   const canvas=document.getElementById('chart');
   const emptyEl=document.getElementById('chart-empty');
@@ -880,30 +866,25 @@ function drawChart(){
   });
   const allKeys=Object.keys(countsAll).sort();
   if(!allKeys.length){canvas.style.display='none';emptyEl.style.display='block';return;}
-  // Build continuous month range from oldest to newest (fill gaps with 0)
-  const first=allKeys[0],last=allKeys[allKeys.length-1];
-  const [fy,fm]=first.split('-').map(Number);
-  const [ly,lm]=last.split('-').map(Number);
-  const allMonthKeys=[];let yy=fy,mm=fm;
-  while(yy<ly||(yy===ly&&mm<=lm)){allMonthKeys.push(yy+'-'+String(mm).padStart(2,'0'));mm++;if(mm>12){mm=1;yy++;}}
-  // Apply range window
-  const keys=(chartRange==='all')?allMonthKeys:allMonthKeys.slice(-chartRange);
+  // Window: last 12 months (sliding) + always include Jan 2025 if it has activity
+  const now=new Date();
+  const cutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
+  const cutoffKey=cutoff.getFullYear()+'-'+String(cutoff.getMonth()+1).padStart(2,'0');
+  const EXCEPTION='2025-01';
+  // Only months WITH activity, within window or exception
+  const keys=allKeys.filter(k=>(k>=cutoffKey)||(k===EXCEPTION&&countsAll[k]>0));
+  if(!keys.length){canvas.style.display='none';emptyEl.style.display='block';return;}
   canvas.style.display='block';emptyEl.style.display='none';
-  const barData=keys.map(k=>countsAll[k]||0);
-  // Cumulative uses TOTAL historical (not just visible range)
-  const totalBefore=allMonthKeys.slice(0,allMonthKeys.indexOf(keys[0])).reduce((s,k)=>s+(countsAll[k]||0),0);
-  const cumData=[];let c=totalBefore;barData.forEach(v=>{c+=v;cumData.push(c);});
+  const barData=keys.map(k=>countsAll[k]);
+  // Cumulative counts ALL movies ever (even hidden months), running total up to each visible key
+  const cumData=keys.map(k=>allKeys.filter(x=>x<=k).reduce((s,x)=>s+countsAll[x],0));
   const labels=keys.map(k=>{const[y,mo]=k.split('-');return MONTHS_FR[parseInt(mo)-1]+"'"+y.slice(2);});
   const dpr=window.devicePixelRatio||1;
-  const parentW=canvas.parentElement.parentElement.offsetWidth-28;
+  const W=canvas.parentElement.offsetWidth-28;
   const n=keys.length;
-  // Horizontal scroll when "Tout" with >12 months: fixed 42px per bar
-  const needsScroll=chartRange==='all'&&n>12;
-  const W=needsScroll?Math.max(parentW,n*42):parentW;
-  canvas.parentElement.style.overflowX=needsScroll?'auto':'hidden';
   const H=260;
-  const maxLabels=Math.max(5,Math.min(8,Math.floor(parentW/55)));
-  const labelStep=needsScroll?1:Math.max(1,Math.ceil(n/maxLabels));
+  const maxLabels=Math.max(5,Math.min(8,Math.floor(W/55)));
+  const labelStep=Math.max(1,Math.ceil(n/maxLabels));
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   const ctx=canvas.getContext('2d');
